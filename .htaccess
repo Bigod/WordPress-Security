@@ -1,32 +1,174 @@
-# wp-config.php schützen
+# ============================================================================
+# WordPress Security .htaccess Konfiguration
+# ============================================================================
+# Diese Regeln implementieren wichtige Sicherheitsmassnahmen zum Schutz
+# einer WordPress-Installation vor Zugriffen auf sensible Dateien und
+# vor PHP-Code-Ausführung in Upload-Verzeichnissen.
+#
+# WICHTIG: Diesen Code in die .htaccess-Datei im WordPress Root-Verzeichnis
+# einfügen oder als separate Blöcke strukturieren.
+#
+# VORAUSSETZUNG: Apache 2.4+ (bei älteren Versionen "Order deny,allow"
+# statt "Require all denied" nutzen)
+# ============================================================================
+
+
+# ============================================================================
+# PRIORISIERUNG DER REGELN
+# ============================================================================
+# 🔥 MUSS HABEN: Regeln 1, 2 und 5 (kritische Sicherheit)
+# ⚡ SOLLTE HABEN: Regeln 3 und 4 (erhöhter Schutz)
+# 💡 OPTIONAL: Zusätzliche Empfehlungen am Ende
+# ============================================================================
+
+
+# ============================================================================
+# 1. wp-config.php schützen 🔥 MUSS HABEN
+# ============================================================================
+# Die wp-config.php enthält sensible Informationen wie Datenbank-Zugangsdaten,
+# Security-Keys und andere kritische Konfigurationen. Diese Datei DARF auf
+# keinen Fall öffentlich zugänglich sein.
+#
+# ============================================================================
 <Files "wp-config.php">
     Require all denied
 </Files>
 
-# .htaccess selbst schützen
+
+# ============================================================================
+# 2. .htaccess selbst schützen 🔥 MUSS HABEN
+# ============================================================================
+# Die .htaccess-Datei selbst könnte von Angreifern eingesehen oder manipuliert
+# werden. Dieser Block verhindert direkten Zugriff darauf.
+#
+# ============================================================================
 <Files ".htaccess">
     Require all denied
 </Files>
 
-# XML-RPC blockieren (wenn nicht benötigt)
+
+# ============================================================================
+# 3. XML-RPC blockieren ⚡ SOLLTE HABEN (optional, je nach Anforderung)
+# ============================================================================
+# XML-RPC (xmlrpc.php) wurde traditionell für Remote-Veröffentlichung von
+# Posts und Plugin-Funktionen genutzt. Heute ist es oft unnötig und kann
+# für Brute-Force-Attacken und DDoS-Angriffe missbraucht werden.
+#
+#
+# ⚠️ ACHTUNG: Folgende Plugins/Dienste benötigen XML-RPC:
+# - Jetpack (WordPress.com Verbindung)
+# - Mobile Apps für WordPress
+# - Viele Backup-Plugins (z.B. BlogVault, ManageWP)
+# - Externe Publishing-Tools
+#
+# EMPFEHLUNG: Nur blockieren, wenn diese Dienste NICHT genutzt werden!
+# Im Zweifelsfall erstmal NICHT aktivieren und später testen.
+# ============================================================================
 <Files "xmlrpc.php">
     Require all denied
 </Files>
 
-# readme.html und license.txt verbergen (Version-Disclosure)
+
+# ============================================================================
+# 4. Sensible Dateien verbergen ⚡ SOLLTE HABEN (Version-Disclosure)
+# ============================================================================
+# Diese Dateien geben Informationen über die WordPress-Version preis,
+# was Angreifern bei der Suche nach bekannten Sicherheitslücken hilft.
+#
+# Dateien:
+# - readme.html: Enthält WordPress-Version und Lizenzinformation
+# - license.txt: GPL-Lizenztext mit Versionsinformation
+# - wp-config-sample.php: Beispiel-Konfiguration (sollte nicht vorhanden sein)
+#
+#
+# TIPP: Diese Dateien können auch einfach manuell gelöscht werden (noch besser!)
+# ============================================================================
 <FilesMatch "^(readme\.html|license\.txt|wp-config-sample\.php)">
     Require all denied
 </FilesMatch>
 
-# PHP-Ausführung in Uploads-Ordner verhindern
-<Directory "/pfad/zu/wp-content/uploads/">
-    <FilesMatch "\.php$">
-        Require all denied
-    </FilesMatch>
-</Directory>
 
-# Alternativ (einfacher):
-# In wp-content/uploads/ eine eigene .htaccess mit:
-# <Files *.php>
-# deny from all
+# ============================================================================
+# 5. PHP-Ausführung im Uploads-Ordner verhindern 🔥 MUSS HABEN (KRITISCH!)
+# ============================================================================
+# Der wp-content/uploads/ Ordner ist das Ziel häufiger Angriffe. Wenn
+# Angreifer Dateien hochladen können (z.B. durch Plugin-Schwachstellen),
+# können sie mit dieser Regel keinen PHP-Code ausführen.
+#
+#
+# EMPFOHLENE METHODE (einfacher und sicherer):
+# ============================================================================
+# Erstelle eine SEPARATE .htaccess-Datei direkt im uploads-Ordner:
+#
+# Pfad: /wp-content/uploads/.htaccess
+#
+# Inhalt:
+# --------
+# <Files "*.php">
+#     Require all denied
 # </Files>
+# --------
+#
+# Vorteile:
+# ✓ Funktioniert unabhängig vom Installationspfad
+# ✓ Einfacher zu verwalten
+# ✓ Bessere Performance
+# ============================================================================
+
+
+# ============================================================================
+# ALTERNATIVE METHODE (nur wenn separate .htaccess nicht möglich):
+# ============================================================================
+# Falls du die Regel hier in der Haupt-.htaccess haben möchtest, nutze diese
+# Version. WICHTIG: Pfad muss an deine Installation angepasst werden!
+# ============================================================================
+# <Directory "/var/www/html/wp-content/uploads/">
+#     <FilesMatch "\.php$">
+#         Require all denied
+#     </FilesMatch>
+# </Directory>
+#
+# BEISPIELE für verschiedene Installationen:
+# - Standard-Installation: /var/www/html/wp-content/uploads/
+# - Subdomain: /var/www/vhosts/example.com/httpdocs/wp-content/uploads/
+# - Unterverzeichnis: /var/www/html/blog/wp-content/uploads/
+# - cPanel: /home/username/public_html/wp-content/uploads/
+#
+# Den exakten Pfad findest du in deinem Hosting-Panel oder via FTP/SSH.
+# ============================================================================
+
+
+# ============================================================================
+# NACH DEM EINFÜGEN TESTEN!
+# ============================================================================
+# ✓ Website lädt noch normal?
+# ✓ wp-config.php über Browser nicht erreichbar?
+#   (Test: https://deine-domain.de/wp-config.php → sollte 403 oder 404 zeigen)
+# ✓ Alle Plugins funktionieren noch?
+# ✓ Bilder im Uploads-Ordner werden noch angezeigt?
+# ✓ Falls XML-RPC blockiert: Jetpack/Mobile Apps noch funktionsfähig?
+# ============================================================================
+
+
+# ============================================================================
+# ZUSÄTZLICHE EMPFEHLUNGEN 💡 OPTIONAL
+# ============================================================================
+#
+# 1. Version-Header entfernen (weiterer Schutz vor Version-Disclosure):
+#    <IfModule mod_headers.c>
+#        Header always unset X-Powered-By
+#        Header unset X-Powered-By
+#    </IfModule>
+#
+# 2. Verzeichnis-Listings verhindern (falls nicht bereits aktiv):
+#    Options -Indexes
+#
+# 3. Zugriff auf versteckte Dateien blockieren (.git, .env, etc.):
+#    <FilesMatch "^\.">
+#        Require all denied
+#    </FilesMatch>
+#
+# 4. Regelmässig Backups machen und Plugins/Themes aktuell halten!
+#    Sicherheit ist ein fortlaufender Prozess, keine einmalige Massnahme.
+#
+# ============================================================================
