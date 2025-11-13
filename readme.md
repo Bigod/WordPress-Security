@@ -1,6 +1,6 @@
 # WordPress Security: Praktische Strategien
 
-Links & Infos zum WP Meetup Mannheim am 13. November 2025
+Links & Infos zum WP Meetup Mannheim am 13. November 2025\
 https://www.meetup.com/wordpress-mannheim/events/311796548/
 
 ## Links
