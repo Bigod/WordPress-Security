@@ -1,0 +1,32 @@
+# wp-config.php schützen
+<Files "wp-config.php">
+    Require all denied
+</Files>
+
+# .htaccess selbst schützen
+<Files ".htaccess">
+    Require all denied
+</Files>
+
+# XML-RPC blockieren (wenn nicht benötigt)
+<Files "xmlrpc.php">
+    Require all denied
+</Files>
+
+# readme.html und license.txt verbergen (Version-Disclosure)
+<FilesMatch "^(readme\.html|license\.txt|wp-config-sample\.php)">
+    Require all denied
+</FilesMatch>
+
+# PHP-Ausführung in Uploads-Ordner verhindern
+<Directory "/pfad/zu/wp-content/uploads/">
+    <FilesMatch "\.php$">
+        Require all denied
+    </FilesMatch>
+</Directory>
+
+# Alternativ (einfacher):
+# In wp-content/uploads/ eine eigene .htaccess mit:
+# <Files *.php>
+# deny from all
+# </Files>
